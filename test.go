@@ -5,7 +5,6 @@ import (
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	"io/ioutil"
-	//"net/http"
 )
 
 func main() {
@@ -14,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	Print(string(fi))
+	//fi := string(fi)
 
 	//resp, _ := http.Get("https://api.github.com/user/ccqpein")
 	//Print(resp)
@@ -26,11 +25,8 @@ func main() {
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client := github.NewClient(tc)
 
-	opt := &github.RepositoryListByOrgOptions{
-		Type:        "public",
-		ListOptions: github.ListOptions{PerPage: 10, Page: 2},
-	}
-	_, resp, err := client.Repositories.ListByOrg("github", opt)
+	repos, _, err := client.Repositories.ListContributorsStats("ccqpein", "what_to_eat")
 
-	Print(resp.NextPage)
+	Println(repos)
+	//Println(repp)
 }
