@@ -13,20 +13,18 @@ func main() {
 		panic(err)
 	}
 
-	//fi := string(fi)
-
-	//resp, _ := http.Get("https://api.github.com/user/ccqpein")
-	//Print(resp)
-
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: string(fi)},
 	)
-
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client := github.NewClient(tc)
 
-	repos, _, err := client.Repositories.ListContributorsStats("ccqpein", "what_to_eat")
+	repos, _, err := client.Repositories.List("ccqpein", nil)
+	for _, repo := range repos {
+		name := string(repo.Name)
+		Printf(name)
+	}
+	//reposs, _, err := client.Repositories.ListCodeFrequency("ccqpein", "Arithmetic-Exercises")
 
-	Println(repos)
-	//Println(repp)
+	//Println(reposs)
 }
