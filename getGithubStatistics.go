@@ -21,10 +21,15 @@ func main() {
 
 	repos, _, err := client.Repositories.List("ccqpein", nil)
 	for _, repo := range repos {
-		name := string(repo.Name)
-		Printf(name)
+		name := repo.Name
+		Println(*name)
+		reposs, _, _ := client.Repositories.ListCodeFrequency("ccqpein", *name)
+		Println(reposs)
+		for _, codeStatues := range reposs {
+			we := *codeStatues.Week
+			ad := *codeStatues.Additions
+			de := *codeStatues.Deletions
+			Println(we, ad, de)
+		}
 	}
-	//reposs, _, err := client.Repositories.ListCodeFrequency("ccqpein", "Arithmetic-Exercises")
-
-	//Println(reposs)
 }
