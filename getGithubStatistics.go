@@ -23,23 +23,33 @@ func main() {
 
 	//sumVar := make(chan int)
 	//delVar := make(chan int)
-	repoDetail := make(chan []github.WeeklyStats)
+	type repoDetail struct {
+		Name   string
+		Detail []github.WeeklyStats
+	}
+	rD := make(chan repoDetail)
 
 	go func() {
 		for _, repo := range repos {
 			name := repo.Name
 			//Println(*name)
 			reposs, _, _ := client.Repositories.ListCodeFrequency("ccqpein", *name)
-			Println(reposs)
-			repoDetail <- reposs
+			var A repoDetail
+			A.Name = *name
+			A.Detail = reposs
+			Println(A.Name)
+			rD <- A
 		}
 	}()
 
-	for _, codeStatues := range <-repoDetail {
-		we := *codeStatues.Week
-		ad := *codeStatues.Additions
-		de := *codeStatues.Deletions
-		Println(we, ad, de)
-
+	for i := 0; i < len(repos); i++ {
+		A := <-rD
+		Println(A.Name)
+		for _, codeStatues := range A.Detail {
+			we := *codeStatues.Week
+			ad := *codeStatues.Additions
+			de := *codeStatues.Deletions
+			Println(we, ad, de)
+		}
 	}
 }
