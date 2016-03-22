@@ -61,5 +61,4 @@ func main() {
 	go GetWeeklyStats(allRepos, rD)
 
 	DoWeeklyStats(rD, allRepos)
-
 }
