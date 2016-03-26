@@ -44,21 +44,25 @@ func GetWeeklyStats(repos []github.Repository, rD chan repoDetail) {
 
 func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) {
 	for i := 0; i < len(repos); i++ {
+		var sumAdd, sumDel int
 		A := <-repoD
 		Println(A.Name)
 		for _, codeStatues := range A.Detail {
 			we := *codeStatues.Week
 			ad := *codeStatues.Additions
 			de := *codeStatues.Deletions
-			Println(we, ad, de)
+			sumAdd += ad
+			sumDel += de
+			//Println(we, ad, de)
 		}
+		Println(sumAdd, sumDel)
 	}
 }
 
 func main() {
 	allRepos := GetAllRepos()
 	rD := make(chan repoDetail)
-	go GetWeeklyStats(allRepos, rD)
 
+	go GetWeeklyStats(allRepos, rD)
 	DoWeeklyStats(rD, allRepos)
 }
