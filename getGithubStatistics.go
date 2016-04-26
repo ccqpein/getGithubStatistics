@@ -48,7 +48,7 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) {
 		A := <-repoD
 		Println(A.Name)
 		for _, codeStatues := range A.Detail {
-			we := *codeStatues.Week
+			//we := *codeStatues.Week
 			ad := *codeStatues.Additions
 			de := *codeStatues.Deletions
 			sumAdd += ad
