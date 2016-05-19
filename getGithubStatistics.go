@@ -5,14 +5,15 @@ import (
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	"io/ioutil"
+	"time"
 )
+
+var client *github.Client
 
 type repoDetail struct {
 	Name   string
 	Detail []github.WeeklyStats
 }
-
-var client *github.Client
 
 func GetAllRepos() []github.Repository {
 	fi, err := ioutil.ReadFile("./token")
@@ -25,16 +26,17 @@ func GetAllRepos() []github.Repository {
 	)
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client = github.NewClient(tc)
+	ReOption := github.RepositoryListOptions{Type: "owner"}
 
-	repos, _, _ := client.Repositories.List("ccqpein", nil)
+	repos, _, _ := client.Repositories.List("ccqpein", &ReOption)
 	return repos
 }
 
 func GetWeeklyStats(repos []github.Repository, rD chan repoDetail) {
 	for _, repo := range repos {
+		var A repoDetail
 		name := repo.Name
 		reposs, _, _ := client.Repositories.ListCodeFrequency("ccqpein", *name)
-		var A repoDetail
 		A.Name = *name
 		A.Detail = reposs
 		//Println(A.Name)
@@ -43,20 +45,29 @@ func GetWeeklyStats(repos []github.Repository, rD chan repoDetail) {
 }
 
 func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) {
+	now := time.Now()
+	OneYearAgo := now.AddDate(-1, 0, 0)
+
 	for i := 0; i < len(repos); i++ {
 		var sumAdd, sumDel int
 		A := <-repoD
 		Println(A.Name)
+		//Println(now, OneYearAgo)
 		for _, codeStatues := range A.Detail {
-			//we := *codeStatues.Week
-			ad := *codeStatues.Additions
-			de := *codeStatues.Deletions
-			sumAdd += ad
-			sumDel += de
-			//Println(we, ad, de)
+			we := *codeStatues.Week
+			if we.After(OneYearAgo) {
+				ad := *codeStatues.Additions
+				de := *codeStatues.Deletions
+				sumAdd += ad
+				sumDel += de
+			}
 		}
 		Println(sumAdd, sumDel)
 	}
+}
+
+func MakeHistogram() {
+
 }
 
 func main() {
