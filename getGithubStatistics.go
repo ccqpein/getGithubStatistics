@@ -5,6 +5,7 @@ import (
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -66,6 +67,28 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) {
 	}
 }
 
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+type ChartFile struct {
+	Title, SubTitle, ValueSuffix, YAxisText string
+	XAxisNumbers                            []int
+	Data                                    map[string][]int
+}
+
+func MakeChartFile() {
+	os.MkdirAll("~/Desktop/tmp", 0777)
+	f, err := os.Create("~/Desktop/tmp/data.chart")
+	check(err)
+	defer f.Close()
+
+	_, err = f.WriteString("test")
+	check(err)
+}
+
 func main() {
 	allRepos := GetAllRepos()
 	rD := make(chan repoDetail)
@@ -74,5 +97,13 @@ func main() {
 	DoWeeklyStats(rD, allRepos)
 
 	//make a folder to collect all chart files, for gochart to use
-
+	/*testC := ChartFile{
+		Title:        "tt",
+		SubTitle:     "ttt",
+		ValueSuffix:  "tet",
+		YAxisText:    "re",
+		XAxisNumbers: []int{1, 2, 3, 4},
+		Data:         map[string][]int{"tt": []int{2, 2, 3, 4, 5}},
+	}*/
+	MakeChartFile()
 }
