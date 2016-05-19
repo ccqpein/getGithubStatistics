@@ -66,14 +66,13 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) {
 	}
 }
 
-func MakeHistogram() {
-
-}
-
 func main() {
 	allRepos := GetAllRepos()
 	rD := make(chan repoDetail)
 
 	go GetWeeklyStats(allRepos, rD)
 	DoWeeklyStats(rD, allRepos)
+
+	//make a folder to collect all chart files, for gochart to use
+
 }
