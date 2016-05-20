@@ -80,7 +80,8 @@ type ChartFile struct {
 }
 
 func MakeChartFile() {
-	os.MkdirAll("~/Desktop/tmp", 0777)
+	err := os.MkdirAll("~/Desktop/tmp", 0777)
+	check(err)
 	f, err := os.Create("~/Desktop/tmp/data.chart")
 	check(err)
 	defer f.Close()
