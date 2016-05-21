@@ -10,13 +10,14 @@ import (
 )
 
 var client *github.Client
+var userName string
 
 type repoDetail struct {
 	Name   string
 	Detail []github.WeeklyStats
 }
 
-func GetAllRepos() []github.Repository {
+func GetAllRepos(userName string) []github.Repository {
 	fi, err := ioutil.ReadFile("./token")
 	if err != nil {
 		panic(err)
@@ -29,42 +30,55 @@ func GetAllRepos() []github.Repository {
 	client = github.NewClient(tc)
 	ReOption := github.RepositoryListOptions{Type: "owner"}
 
-	repos, _, _ := client.Repositories.List("ccqpein", &ReOption)
+	repos, _, _ := client.Repositories.List(userName, &ReOption)
 	return repos
 }
 
-func GetWeeklyStats(repos []github.Repository, rD chan repoDetail) {
+func GetWeeklyStats(userName string, repos []github.Repository, rD chan repoDetail) {
 	for _, repo := range repos {
 		var A repoDetail
 		name := repo.Name
-		reposs, _, _ := client.Repositories.ListCodeFrequency("ccqpein", *name)
+		reposs, _, _ := client.Repositories.ListCodeFrequency(userName, *name)
 		A.Name = *name
 		A.Detail = reposs
-		//Println(A.Name)
 		rD <- A
 	}
 }
 
-func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) {
+type repoWeekDetail struct {
+	Name       string
+	weeklyData [][]int
+}
+
+func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekDetail {
 	now := time.Now()
 	OneYearAgo := now.AddDate(-1, 0, 0)
+	var repoWeekDetailList []repoWeekDetail
 
 	for i := 0; i < len(repos); i++ {
 		var sumAdd, sumDel int
+		var weeklyData [][]int
+
 		A := <-repoD
-		Println(A.Name)
-		//Println(now, OneYearAgo)
+		//Println(A.Name)
+
 		for _, codeStatues := range A.Detail {
 			we := *codeStatues.Week
 			if we.After(OneYearAgo) {
 				ad := *codeStatues.Additions
 				de := *codeStatues.Deletions
+				var temp = []int{ad, de}
+				weeklyData = append(weeklyData, temp)
 				sumAdd += ad
 				sumDel += de
 			}
 		}
-		Println(sumAdd, sumDel)
+
+		var tempDetail = repoWeekDetail{Name: A.Name, weeklyData: weeklyData}
+		repoWeekDetailList = append(repoWeekDetailList, tempDetail)
+		//Println(weeklyData, sumAdd, sumDel)
 	}
+	return repoWeekDetailList
 }
 
 func check(e error) {
@@ -79,23 +93,33 @@ type ChartFile struct {
 	Data                                    map[string][]int
 }
 
-func MakeChartFile() {
-	err := os.MkdirAll("~/Desktop/tmp", 0777)
-	check(err)
-	f, err := os.Create("~/Desktop/tmp/data.chart")
+func MakeChartFile(dataInput *repoWeekDetail) {
+	if _, err := os.Stat("./tmp"); err != nil {
+		if os.IsNotExist(err) {
+			Print("Create new folder store data")
+			os.MkdirAll("./tmp", 0777)
+		}
+	}
+
+	f, err := os.Create("./tmp/data.chart")
 	check(err)
 	defer f.Close()
 
-	_, err = f.WriteString("test")
+	_, err = f.WriteString("test2")
 	check(err)
 }
 
 func main() {
-	allRepos := GetAllRepos()
+
+	//Scanf("Input your name %s \n", &userName)
+	//Need make username can be changed from cli
+	userName = "ccqpein"
+	allRepos := GetAllRepos(userName)
 	rD := make(chan repoDetail)
 
-	go GetWeeklyStats(allRepos, rD)
-	DoWeeklyStats(rD, allRepos)
+	go GetWeeklyStats(userName, allRepos, rD)
+	tempFileDat := DoWeeklyStats(rD, allRepos)
+	Println(tempFileDat)
 
 	//make a folder to collect all chart files, for gochart to use
 	/*testC := ChartFile{
@@ -106,5 +130,5 @@ func main() {
 		XAxisNumbers: []int{1, 2, 3, 4},
 		Data:         map[string][]int{"tt": []int{2, 2, 3, 4, 5}},
 	}*/
-	MakeChartFile()
+	MakeChartFile(&tempFileDat[0])
 }
