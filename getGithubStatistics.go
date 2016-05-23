@@ -6,6 +6,7 @@ import (
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -108,17 +109,21 @@ func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
 	return chartTemp
 }
 
-func main() {
+func WriteChartFileIn(dataInput ChartFile) error {
+	var stringToWrite string
 
-	//Scanf("Input your name %s \n", &userName)
-	//Need make username can be changed from cli
-	userName = "ccqpein"
-	allRepos := GetAllRepos(userName)
-	rD := make(chan repoDetail)
-
-	go GetWeeklyStats(userName, allRepos, rD)
-	tempFileDat := DoWeeklyStats(rD, allRepos)
-	fileData := MakeChartFile(&tempFileDat)
+	stringToWrite = Sprintf("ChartType = bar \nTitle = %s \nSubTitle = %s \nValueSuffix = %s \nXAxisNumbers = %s \nYAxisText = %s \n \n# The data and the name of the lines \n",
+		dataInput.Title,
+		dataInput.SubTitle,
+		dataInput.ValueSuffix,
+		func(dd []int) string {
+			ss := ""
+			for _, num := range dd {
+				ss = ss + strconv.Itoa(num) + ", "
+			}
+			return ss
+		}(dataInput.XAxisNumbers),
+		dataInput.YAxisText)
 
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
@@ -131,7 +136,21 @@ func main() {
 	check(err)
 	defer f.Close()
 
-	_, err = f.WriteString("test2")
+	_, err = f.WriteString(stringToWrite)
 	check(err)
+	return err
+}
 
+func main() {
+
+	//Scanf("Input your name %s \n", &userName)
+	//Need make username can be changed from cli
+	userName = "ccqpein"
+	allRepos := GetAllRepos(userName)
+	rD := make(chan repoDetail)
+
+	go GetWeeklyStats(userName, allRepos, rD)
+	tempFileDat := DoWeeklyStats(rD, allRepos)
+	fileData := MakeChartFile(&tempFileDat)
+	WriteChartFileIn(fileData)
 }
