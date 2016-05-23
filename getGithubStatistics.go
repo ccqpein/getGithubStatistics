@@ -109,6 +109,25 @@ func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
 	return chartTemp
 }
 
+type intArray1 []int
+type intArray2 [][]int
+
+func (dd intArray1) changeToString() string {
+	ss := ""
+	for _, num := range dd {
+		ss = ss + strconv.Itoa(num) + ", "
+	}
+	return ss
+}
+
+func (dd intArray2) changeToString2(index int) string {
+	ss := ""
+	for _, num := range dd {
+		ss = ss + strconv.Itoa(num[index]) + ", "
+	}
+	return ss
+}
+
 func WriteChartFileIn(dataInput ChartFile) error {
 	var stringToWrite string
 
@@ -116,14 +135,18 @@ func WriteChartFileIn(dataInput ChartFile) error {
 		dataInput.Title,
 		dataInput.SubTitle,
 		dataInput.ValueSuffix,
-		func(dd []int) string {
-			ss := ""
-			for _, num := range dd {
-				ss = ss + strconv.Itoa(num) + ", "
-			}
-			return ss
-		}(dataInput.XAxisNumbers),
+		intArray1(dataInput.XAxisNumbers).changeToString(),
 		dataInput.YAxisText)
+
+	stringToWrite = stringToWrite +
+		func(d []repoWeekDetail) string {
+			stringTemp := ""
+			for _, i := range d {
+				stringTemp = stringTemp + Sprintf("Data|%s = %s \n",
+					i.Name, intArray2(i.weeklyData).changeToString2(0))
+			}
+			return stringTemp
+		}(dataInput.Data)
 
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
