@@ -60,8 +60,6 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekD
 		var weeklyData [][]int
 
 		A := <-repoD
-		//Println(A.Name)
-
 		for _, codeStatues := range A.Detail {
 			we := *codeStatues.Week
 			if we.After(OneYearAgo) {
@@ -90,7 +88,7 @@ func check(e error) {
 type ChartFile struct {
 	Title, SubTitle, ValueSuffix, YAxisText string
 	XAxisNumbers                            []int
-	Data                                    map[string][]int
+	Data                                    []repoWeekDetail
 }
 
 func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
@@ -102,9 +100,8 @@ func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
 		YAxisText:    "Line ",
 	}
 
-	for i, _ := range *dataInput {
-		Println(i)
-		Println(chartTemp.Title)
+	for _, i := range *dataInput {
+		chartTemp.Data = append(chartTemp.Data, i)
 
 	}
 	Println(chartTemp)
@@ -121,18 +118,7 @@ func main() {
 
 	go GetWeeklyStats(userName, allRepos, rD)
 	tempFileDat := DoWeeklyStats(rD, allRepos)
-	Println(tempFileDat)
-	//make a folder to collect all chart files, for gochart to use
-	/*testC := ChartFile{
-		Title:        "tt",
-		SubTitle:     "ttt",
-		ValueSuffix:  "tet",
-		YAxisText:    "re",
-		XAxisNumbers: []int{1, 2, 3, 4},
-		Data:         map[string][]int{"tt": []int{2, 2, 3, 4, 5}},
-	}*/
-
-	MakeChartFile(&tempFileDat)
+	fileData := MakeChartFile(&tempFileDat)
 
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
