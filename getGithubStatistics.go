@@ -93,20 +93,22 @@ type ChartFile struct {
 	Data                                    map[string][]int
 }
 
-func MakeChartFile(dataInput *repoWeekDetail) {
-	if _, err := os.Stat("./tmp"); err != nil {
-		if os.IsNotExist(err) {
-			Print("Create new folder store data")
-			os.MkdirAll("./tmp", 0777)
-		}
+func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
+	var chartTemp = ChartFile{
+		Title:        "LineNumbers",
+		SubTitle:     " ",
+		ValueSuffix:  "",
+		XAxisNumbers: []int{5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70},
+		YAxisText:    "Line ",
 	}
 
-	f, err := os.Create("./tmp/data.chart")
-	check(err)
-	defer f.Close()
+	for i, _ := range *dataInput {
+		Println(i)
+		Println(chartTemp.Title)
 
-	_, err = f.WriteString("test2")
-	check(err)
+	}
+	Println(chartTemp)
+	return chartTemp
 }
 
 func main() {
@@ -120,7 +122,6 @@ func main() {
 	go GetWeeklyStats(userName, allRepos, rD)
 	tempFileDat := DoWeeklyStats(rD, allRepos)
 	Println(tempFileDat)
-
 	//make a folder to collect all chart files, for gochart to use
 	/*testC := ChartFile{
 		Title:        "tt",
@@ -130,5 +131,21 @@ func main() {
 		XAxisNumbers: []int{1, 2, 3, 4},
 		Data:         map[string][]int{"tt": []int{2, 2, 3, 4, 5}},
 	}*/
-	MakeChartFile(&tempFileDat[0])
+
+	MakeChartFile(&tempFileDat)
+
+	if _, err := os.Stat("./tmp"); err != nil {
+		if os.IsNotExist(err) {
+			Print("Create new folder store data")
+			os.MkdirAll("./tmp", 0777)
+		}
+	}
+
+	f, err := os.Create("./tmp/data.chart")
+	check(err)
+	defer f.Close()
+
+	_, err = f.WriteString("test2")
+	check(err)
+
 }
