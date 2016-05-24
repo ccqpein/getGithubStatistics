@@ -87,13 +87,14 @@ func check(e error) {
 }
 
 type ChartFile struct {
-	Title, SubTitle, ValueSuffix, YAxisText string
-	XAxisNumbers                            []int
-	Data                                    []repoWeekDetail
+	ChartType, Title, SubTitle, ValueSuffix, YAxisText string
+	XAxisNumbers                                       []int
+	Data                                               []repoWeekDetail
 }
 
 func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
 	var chartTemp = ChartFile{
+		ChartType:    "column",
 		Title:        "LineNumbers",
 		SubTitle:     " ",
 		ValueSuffix:  "",
@@ -120,7 +121,31 @@ func (dd intArray1) changeToString() string {
 	return ss
 }
 
-func (dd intArray2) changeToString2(index int) string {
+/*func addOtherSlice(ff ...[]int) []int {
+	var rr []int
+	longestIndex := 0
+	longestLen := 0
+	for i := 0; i < len(ff); i++ {
+		if len(ff[i]) > longestLen {
+			longestIndex = i
+			longestLen = len(ff[i])
+		}
+	}
+
+	for i, _ := range ff[longestIndex] {
+		sum := 0
+		for _, d := range ff {
+			err := d[i]
+			if err != nil {
+				sum = sum + t
+			}
+		}
+		rr = append(rr, sum)
+	}
+	return rr
+}*/
+
+func (dd intArray2) changeToString(index int) string {
 	ss := ""
 	for _, num := range dd {
 		ss = ss + strconv.Itoa(num[index]) + ", "
@@ -128,10 +153,19 @@ func (dd intArray2) changeToString2(index int) string {
 	return ss
 }
 
+func (dd intArray2) getOut(index int) []int {
+	var rr []int
+	for _, num := range dd {
+		rr = append(rr, num[index])
+	}
+	return rr
+}
+
 func WriteChartFileIn(dataInput ChartFile) error {
 	var stringToWrite string
 
-	stringToWrite = Sprintf("ChartType = bar \nTitle = %s \nSubTitle = %s \nValueSuffix = %s \nXAxisNumbers = %s \nYAxisText = %s \n \n# The data and the name of the lines \n",
+	stringToWrite = Sprintf("ChartType = %s \nTitle = %s \nSubTitle = %s \nValueSuffix = %s \nXAxisNumbers = %s \nYAxisText = %s \n \n# The data and the name of the lines \n",
+		dataInput.ChartType,
 		dataInput.Title,
 		dataInput.SubTitle,
 		dataInput.ValueSuffix,
@@ -143,7 +177,46 @@ func WriteChartFileIn(dataInput ChartFile) error {
 			stringTemp := ""
 			for _, i := range d {
 				stringTemp = stringTemp + Sprintf("Data|%s = %s \n",
-					i.Name, intArray2(i.weeklyData).changeToString2(0))
+					i.Name, intArray2(i.weeklyData).changeToString(0))
+			}
+			return stringTemp
+		}(dataInput.Data)
+
+	if _, err := os.Stat("./tmp"); err != nil {
+		if os.IsNotExist(err) {
+			Print("Create new folder store data")
+			os.MkdirAll("./tmp", 0777)
+		}
+	}
+
+	f, err := os.Create("./tmp/data.chart")
+	check(err)
+	defer f.Close()
+
+	_, err = f.WriteString(stringToWrite)
+	check(err)
+	return err
+}
+
+func WriteChartFileInSum(dataInput ChartFile) error {
+	var stringToWrite string
+
+	stringToWrite = Sprintf("ChartType = %s \nTitle = %s \nSubTitle = %s \nValueSuffix = %s \nXAxisNumbers = %s \nYAxisText = %s \n \n# The data and the name of the lines \n",
+		dataInput.ChartType,
+		dataInput.Title,
+		dataInput.SubTitle,
+		dataInput.ValueSuffix,
+		intArray1(dataInput.XAxisNumbers).changeToString(),
+		dataInput.YAxisText)
+
+	stringToWrite = stringToWrite +
+		func(d []repoWeekDetail) string {
+			stringTemp := ""
+			//var sumAddList []int
+			//var sumDelList []int
+			for _, i := range d {
+				stringTemp = stringTemp + Sprintf("Data|%s = %s \n",
+					i.Name, intArray2(i.weeklyData).changeToString(0))
 			}
 			return stringTemp
 		}(dataInput.Data)
@@ -168,6 +241,7 @@ func main() {
 
 	//Scanf("Input your name %s \n", &userName)
 	//Need make username can be changed from cli
+
 	userName = "ccqpein"
 	allRepos := GetAllRepos(userName)
 	rD := make(chan repoDetail)
@@ -176,4 +250,6 @@ func main() {
 	tempFileDat := DoWeeklyStats(rD, allRepos)
 	fileData := MakeChartFile(&tempFileDat)
 	WriteChartFileIn(fileData)
+	//addOtherSlice([]int{1, 2, 3, 4, 5}, []int{2, 3, 4}, []int{4, 2, 2})
+	panic([]int{1, 2, 3}[3])
 }
