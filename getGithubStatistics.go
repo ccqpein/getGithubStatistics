@@ -54,6 +54,7 @@ type repoWeekDetail struct {
 func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekDetail {
 	now := time.Now()
 	OneYearAgo := now.AddDate(-1, 0, 0)
+	//Println((now.Sub(OneYearAgo).Hours() / 24))
 	var repoWeekDetailList []repoWeekDetail
 
 	for i := 0; i < len(repos); i++ {
@@ -63,6 +64,13 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekD
 		A := <-repoD
 		for _, codeStatues := range A.Detail {
 			we := *codeStatues.Week
+			//Println(A.Name, we)
+			if we == *A.Detail[0].Week && we.After(OneYearAgo) {
+				da := int(we.Sub(OneYearAgo).Hours() / (24 * 7))
+				for daa := 0; daa < da; daa++ {
+					weeklyData = append(weeklyData, []int{0, 0})
+				}
+			}
 			if we.After(OneYearAgo) {
 				ad := *codeStatues.Additions
 				de := *codeStatues.Deletions
@@ -75,7 +83,7 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekD
 
 		var tempDetail = repoWeekDetail{Name: A.Name, weeklyData: weeklyData}
 		repoWeekDetailList = append(repoWeekDetailList, tempDetail)
-		//Println(weeklyData, sumAdd, sumDel)
+		Println(len(weeklyData))
 	}
 	return repoWeekDetailList
 }
@@ -120,30 +128,6 @@ func (dd intArray1) changeToString() string {
 	}
 	return ss
 }
-
-/*func addOtherSlice(ff ...[]int) []int {
-	var rr []int
-	longestIndex := 0
-	longestLen := 0
-	for i := 0; i < len(ff); i++ {
-		if len(ff[i]) > longestLen {
-			longestIndex = i
-			longestLen = len(ff[i])
-		}
-	}
-
-	for i, _ := range ff[longestIndex] {
-		sum := 0
-		for _, d := range ff {
-			err := d[i]
-			if err != nil {
-				sum = sum + t
-			}
-		}
-		rr = append(rr, sum)
-	}
-	return rr
-}*/
 
 func (dd intArray2) changeToString(index int) string {
 	ss := ""
@@ -198,45 +182,6 @@ func WriteChartFileIn(dataInput ChartFile) error {
 	return err
 }
 
-func WriteChartFileInSum(dataInput ChartFile) error {
-	var stringToWrite string
-
-	stringToWrite = Sprintf("ChartType = %s \nTitle = %s \nSubTitle = %s \nValueSuffix = %s \nXAxisNumbers = %s \nYAxisText = %s \n \n# The data and the name of the lines \n",
-		dataInput.ChartType,
-		dataInput.Title,
-		dataInput.SubTitle,
-		dataInput.ValueSuffix,
-		intArray1(dataInput.XAxisNumbers).changeToString(),
-		dataInput.YAxisText)
-
-	stringToWrite = stringToWrite +
-		func(d []repoWeekDetail) string {
-			stringTemp := ""
-			//var sumAddList []int
-			//var sumDelList []int
-			for _, i := range d {
-				stringTemp = stringTemp + Sprintf("Data|%s = %s \n",
-					i.Name, intArray2(i.weeklyData).changeToString(0))
-			}
-			return stringTemp
-		}(dataInput.Data)
-
-	if _, err := os.Stat("./tmp"); err != nil {
-		if os.IsNotExist(err) {
-			Print("Create new folder store data")
-			os.MkdirAll("./tmp", 0777)
-		}
-	}
-
-	f, err := os.Create("./tmp/data.chart")
-	check(err)
-	defer f.Close()
-
-	_, err = f.WriteString(stringToWrite)
-	check(err)
-	return err
-}
-
 func main() {
 
 	//Scanf("Input your name %s \n", &userName)
@@ -250,6 +195,4 @@ func main() {
 	tempFileDat := DoWeeklyStats(rD, allRepos)
 	fileData := MakeChartFile(&tempFileDat)
 	WriteChartFileIn(fileData)
-	//addOtherSlice([]int{1, 2, 3, 4, 5}, []int{2, 3, 4}, []int{4, 2, 2})
-	panic([]int{1, 2, 3}[3])
 }
