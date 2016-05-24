@@ -83,7 +83,8 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekD
 
 		var tempDetail = repoWeekDetail{Name: A.Name, weeklyData: weeklyData}
 		repoWeekDetailList = append(repoWeekDetailList, tempDetail)
-		Println(len(weeklyData))
+		//Println(len(weeklyData))
+		Println(A.Name, sumAdd, sumDel)
 	}
 	return repoWeekDetailList
 }
@@ -114,7 +115,7 @@ func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
 		chartTemp.Data = append(chartTemp.Data, i)
 
 	}
-	Println(chartTemp)
+	//Println(chartTemp)
 	return chartTemp
 }
 
