@@ -11,13 +11,29 @@ import (
 )
 
 var client *github.Client
-var userName string
+var userName = "ccqpein"
 
+// Define types
 type repoDetail struct {
 	Name   string
 	Detail []github.WeeklyStats
 }
 
+type repoWeekDetail struct {
+	Name       string
+	weeklyData [][]int
+}
+
+type ChartFile struct {
+	ChartType, Title, SubTitle, ValueSuffix, YAxisText string
+	XAxisNumbers                                       []int
+	Data                                               []repoWeekDetail
+}
+
+type intArray1 []int
+type intArray2 [][]int
+
+// Authentication and collect repos information
 func GetAllRepos(userName string) []github.Repository {
 	fi, err := ioutil.ReadFile("./token")
 	if err != nil {
@@ -46,11 +62,7 @@ func GetWeeklyStats(userName string, repos []github.Repository, rD chan repoDeta
 	}
 }
 
-type repoWeekDetail struct {
-	Name       string
-	weeklyData [][]int
-}
-
+// Handle the information
 func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekDetail {
 	now := time.Now()
 	OneYearAgo := now.AddDate(-1, 0, 0)
@@ -89,16 +101,11 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekD
 	return repoWeekDetailList
 }
 
+// Make chart file
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-type ChartFile struct {
-	ChartType, Title, SubTitle, ValueSuffix, YAxisText string
-	XAxisNumbers                                       []int
-	Data                                               []repoWeekDetail
 }
 
 func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
@@ -119,9 +126,6 @@ func MakeChartFile(dataInput *[]repoWeekDetail) ChartFile {
 	return chartTemp
 }
 
-type intArray1 []int
-type intArray2 [][]int
-
 func (dd intArray1) changeToString() string {
 	ss := ""
 	for _, num := range dd {
@@ -138,13 +142,14 @@ func (dd intArray2) changeToString(index int) string {
 	return ss
 }
 
+/*
 func (dd intArray2) getOut(index int) []int {
 	var rr []int
 	for _, num := range dd {
 		rr = append(rr, num[index])
 	}
 	return rr
-}
+}*/
 
 func WriteChartFileIn(dataInput ChartFile) error {
 	var stringToWrite string
@@ -188,7 +193,6 @@ func main() {
 	//Scanf("Input your name %s \n", &userName)
 	//Need make username can be changed from cli
 
-	userName = "ccqpein"
 	allRepos := GetAllRepos(userName)
 	rD := make(chan repoDetail)
 
