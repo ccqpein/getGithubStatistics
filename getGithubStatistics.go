@@ -34,6 +34,7 @@ type intArray1 []int
 type intArray2 [][]int
 
 // Authentication and collect repos information
+// Codes come from Go official document
 func GetAllRepos(userName string) []github.Repository {
 	fi, err := ioutil.ReadFile("./token")
 	if err != nil {
@@ -142,18 +143,10 @@ func (dd intArray2) changeToString(index int) string {
 	return ss
 }
 
-/*
-func (dd intArray2) getOut(index int) []int {
-	var rr []int
-	for _, num := range dd {
-		rr = append(rr, num[index])
-	}
-	return rr
-}*/
-
 func WriteChartFileIn(dataInput ChartFile) error {
 	var stringToWrite string
 
+	// Write gochart file
 	stringToWrite = Sprintf("ChartType = %s \nTitle = %s \nSubTitle = %s \nValueSuffix = %s \nXAxisNumbers = %s \nYAxisText = %s \n \n# The data and the name of the lines \n",
 		dataInput.ChartType,
 		dataInput.Title,
@@ -172,6 +165,7 @@ func WriteChartFileIn(dataInput ChartFile) error {
 			return stringTemp
 		}(dataInput.Data)
 
+	// Save file in folder
 	if _, err := os.Stat("./tmp"); err != nil {
 		if os.IsNotExist(err) {
 			Print("Create new folder store data")
