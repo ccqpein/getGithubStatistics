@@ -44,6 +44,7 @@ func GetAllRepos(userName string) []github.Repository {
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: string(fi)},
 	)
+
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client = github.NewClient(tc)
 	ReOption := github.RepositoryListOptions{Type: "owner"}
