@@ -16,7 +16,7 @@ var userName = "ccqpein"
 // Define types
 type repoDetail struct {
 	Name   string
-	Detail []github.WeeklyStats
+	Detail []*github.WeeklyStats
 }
 
 type repoWeekDetail struct {
@@ -35,7 +35,7 @@ type intArray2 [][]int
 
 // Authentication and collect repos information
 // Codes come from Go official document
-func GetAllRepos(userName string) []github.Repository {
+func GetAllRepos(userName string) []*github.Repository {
 	fi, err := ioutil.ReadFile("./token")
 	if err != nil {
 		panic(err)
@@ -53,7 +53,7 @@ func GetAllRepos(userName string) []github.Repository {
 	return repos
 }
 
-func GetWeeklyStats(userName string, repos []github.Repository, rD chan repoDetail) {
+func GetWeeklyStats(userName string, repos []*github.Repository, rD chan repoDetail) {
 	for _, repo := range repos {
 		var A repoDetail
 		name := repo.Name
@@ -65,7 +65,7 @@ func GetWeeklyStats(userName string, repos []github.Repository, rD chan repoDeta
 }
 
 // Handle the information
-func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekDetail {
+func DoWeeklyStats(repoD chan repoDetail, repos []*github.Repository) []repoWeekDetail {
 	now := time.Now()
 	OneYearAgo := now.AddDate(-1, 0, 0)
 	//Println((now.Sub(OneYearAgo).Hours() / 24))
@@ -103,7 +103,8 @@ func DoWeeklyStats(repoD chan repoDetail, repos []github.Repository) []repoWeekD
 	return repoWeekDetailList
 }
 
-// Make chart file
+//// Make chart file below
+//------------------------------------------------------------------------------------
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -184,15 +185,14 @@ func WriteChartFileIn(dataInput ChartFile) error {
 }
 
 func main() {
-
 	//Scanf("Input your name %s \n", &userName)
 	//Need make username can be changed from cli
 
 	allRepos := GetAllRepos(userName)
 	rD := make(chan repoDetail)
-
 	go GetWeeklyStats(userName, allRepos, rD)
 	tempFileDat := DoWeeklyStats(rD, allRepos)
+
 	fileData := MakeChartFile(&tempFileDat)
 	WriteChartFileIn(fileData)
 }
