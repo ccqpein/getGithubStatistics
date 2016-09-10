@@ -41,15 +41,21 @@ func GetAllRepos(userName string) []*github.Repository {
 		panic(err)
 	}
 
+	// Println(string(fi))
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: string(fi)},
 	)
 
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
-	client = github.NewClient(tc)
-	ReOption := github.RepositoryListOptions{Type: "owner"}
+	client := github.NewClient(tc)
+	ReOption := &github.RepositoryListOptions{Type: "owner"}
 
-	repos, _, _ := client.Repositories.List(userName, &ReOption)
+	repos, _, err2 := client.Repositories.List("", ReOption)
+	if err2 != nil {
+		Println(err2)
+	}
+
+	Println(repos)
 	return repos
 }
 
@@ -195,4 +201,10 @@ func main() {
 
 	fileData := MakeChartFile(&tempFileDat)
 	WriteChartFileIn(fileData)
+
+	/*client := github.NewClient(nil)
+	// list public repositories for org "github"
+	repos, _, err := client.Repositories.List("ccqpein", nil)
+	Println(repos)
+	Println(err)*/
 }
