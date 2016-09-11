@@ -1,16 +1,15 @@
 package main
 
 import (
+	"bufio"
 	. "fmt"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
 )
 
-var client *github.Client
 var userName = "ccqpein"
 
 // Define types
@@ -35,31 +34,36 @@ type intArray2 [][]int
 
 // Authentication and collect repos information
 // Codes come from Go official document
-func GetAllRepos(userName string) []*github.Repository {
-	fi, err := ioutil.ReadFile("./token")
-	if err != nil {
-		panic(err)
-	}
+func Authentication(userName string) *github.Client {
+	fi, err := os.Open("./token")
+	check(err)
+	ffi := bufio.NewReader(fi)
 
-	// Println(string(fi))
+	str, _, _ := ffi.ReadLine()
+
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: string(fi)},
+		&oauth2.Token{AccessToken: string(str)},
 	)
 
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client := github.NewClient(tc)
-	ReOption := &github.RepositoryListOptions{Type: "owner"}
 
-	repos, _, err2 := client.Repositories.List("", ReOption)
+	return client
+}
+
+func GetAllRepos(userName string, client *github.Client) []*github.Repository {
+
+	ReOption := &github.RepositoryListOptions{Type: "owner"}
+	repos, _, err2 := client.Repositories.List(userName, ReOption)
 	if err2 != nil {
 		Println(err2)
 	}
 
-	Println(repos)
+	//Println(repos)
 	return repos
 }
 
-func GetWeeklyStats(userName string, repos []*github.Repository, rD chan repoDetail) {
+func GetWeeklyStats(userName string, repos []*github.Repository, rD chan repoDetail, client *github.Client) {
 	for _, repo := range repos {
 		var A repoDetail
 		name := repo.Name
@@ -191,20 +195,14 @@ func WriteChartFileIn(dataInput ChartFile) error {
 }
 
 func main() {
-	//Scanf("Input your name %s \n", &userName)
-	//Need make username can be changed from cli
+	client := Authentication(userName)
 
-	allRepos := GetAllRepos(userName)
+	allRepos := GetAllRepos(userName, client)
 	rD := make(chan repoDetail)
-	go GetWeeklyStats(userName, allRepos, rD)
+	go GetWeeklyStats(userName, allRepos, rD, client)
 	tempFileDat := DoWeeklyStats(rD, allRepos)
 
 	fileData := MakeChartFile(&tempFileDat)
 	WriteChartFileIn(fileData)
 
-	/*client := github.NewClient(nil)
-	// list public repositories for org "github"
-	repos, _, err := client.Repositories.List("ccqpein", nil)
-	Println(repos)
-	Println(err)*/
 }
