@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	. "fmt"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -52,9 +53,9 @@ func Authentication(userName string) *github.Client {
 }
 
 func GetAllRepos(userName string, client *github.Client) []*github.Repository {
-
+	ctx := context.Background()
 	ReOption := &github.RepositoryListOptions{Type: "owner"}
-	repos, _, err2 := client.Repositories.List(userName, ReOption)
+	repos, _, err2 := client.Repositories.List(ctx, userName, ReOption)
 	if err2 != nil {
 		Println(err2)
 	}
@@ -64,10 +65,11 @@ func GetAllRepos(userName string, client *github.Client) []*github.Repository {
 }
 
 func GetWeeklyStats(userName string, repos []*github.Repository, rD chan repoDetail, client *github.Client) {
+	ctx := context.Background()
 	for _, repo := range repos {
 		var A repoDetail
 		name := repo.Name
-		reposs, _, _ := client.Repositories.ListCodeFrequency(userName, *name)
+		reposs, _, _ := client.Repositories.ListCodeFrequency(ctx, userName, *name)
 		A.Name = *name
 		A.Detail = reposs
 		rD <- A
