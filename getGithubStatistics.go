@@ -8,7 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"os"
 	"strconv"
-	"sync"
+	//"sync"
 	"time"
 )
 
@@ -64,15 +64,17 @@ func GetAllRepos(userName string, client *github.Client) []*github.Repository {
 	return repos
 }
 
-func GetWeeklyStats(userName string, repo *github.Repository, rD chan repoDetail, client *github.Client, wg sync.WaitGroup) {
-	defer wg.Done()
+func GetWeeklyStats(userName string, repos []*github.Repository, rD chan repoDetail, client *github.Client) {
 	ctx := context.Background()
-	var A repoDetail
-	name := repo.Name
-	reposs, _, _ := client.Repositories.ListCodeFrequency(ctx, userName, *name)
-	A.Name = *name
-	A.Detail = reposs
-	rD <- A
+	for _, repo := range repos {
+		var A repoDetail
+		name := repo.Name
+		reposs, _, _ := client.Repositories.ListCodeFrequency(ctx, userName, *name)
+		A.Name = *name
+		A.Detail = reposs
+		rD <- A
+	}
+	close(rD)
 }
 
 // Handle the information
@@ -82,11 +84,10 @@ func DoWeeklyStats(repoD chan repoDetail, repos []*github.Repository) []repoWeek
 	//Println((now.Sub(OneYearAgo).Hours() / 24))
 	var repoWeekDetailList []repoWeekDetail
 
-	for i := 0; i < len(repos); i++ {
+	for A := range repoD {
 		var sumAdd, sumDel int
 		var weeklyData [][]int
 
-		A := <-repoD
 		for _, codeStatues := range A.Detail {
 			we := *codeStatues.Week
 			//Println(A.Name, we)
@@ -197,17 +198,12 @@ func WriteChartFileIn(dataInput ChartFile) error {
 
 func main() {
 	client := Authentication(userName)
-	wg := sync.WaitGroup{}
 
 	allRepos := GetAllRepos(userName, client)
 	//	Println(allRepos)
 	rD := make(chan repoDetail)
-	wg.Add(len(allRepos))
-	for _, repo := range allRepos {
-		Println(*repo.Name)
-		go GetWeeklyStats(userName, repo, rD, client, wg)
-	}
-	wg.Wait()
+	go GetWeeklyStats(userName, allRepos, rD, client)
+
 	tempFileDat := DoWeeklyStats(rD, allRepos)
 
 	fileData := MakeChartFile(&tempFileDat)
