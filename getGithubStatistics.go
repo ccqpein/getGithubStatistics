@@ -4,15 +4,15 @@ import (
 	"bufio"
 	"context"
 	. "fmt"
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 	"os"
 	"strconv"
+	"strings"
+
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 	//"sync"
 	"time"
 )
-
-var userName = "ccqpein"
 
 // Define types
 type repoDetail struct {
@@ -197,6 +197,11 @@ func WriteChartFileIn(dataInput ChartFile) error {
 }
 
 func main() {
+	reader := bufio.NewReader(os.Stdin)
+	Print("Username: ")
+	userName, _ := reader.ReadString('\n')
+	userName = strings.Replace(userName, "\n", "", -1)
+
 	client := Authentication(userName)
 
 	allRepos := GetAllRepos(userName, client)

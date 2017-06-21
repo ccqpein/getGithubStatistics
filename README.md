@@ -18,4 +18,5 @@ You need to get the authentication from github, [Get Token](https://github.com/g
 
 Code will read *Token* file and get the repos information from github. Then code will collect weekly contribution data and make the chartfile which could be loaded by gochart in `/tmp`. You can use `gochart` under `tmp` folder.
 
-Please remember change the `userName` in code
+~~Please remember change the `userName` in code~~
+Now you can input username in console.
